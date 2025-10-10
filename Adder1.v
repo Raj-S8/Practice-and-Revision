@@ -19,7 +19,7 @@ module full_adder( // Full adder is a parent module with 2 child modules add1 an
     output full_sum, full_carry
 );
 
-wire s1, c1, c2 // We need Sum from the first adder and the carry from both the adders to add later {2}
+wire s1, c1, c2; // We need Sum from the first adder and the carry from both the adders to add later {2}
 
 // The instance name of the child modules is mandatory without which there would be a syntax error;
 
