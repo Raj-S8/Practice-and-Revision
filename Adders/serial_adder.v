@@ -7,57 +7,56 @@ module full_adder_serial(
 endmodule
 
 module in_registers(
+    input rst,
     input clk,
-    input [3:0] a, b,
-    output reg a_inbit, b_inbit
+    input load,
+    input [3:0] data_in,
+    output reg out_bit,
+    output reg done
 );
-    reg[3:0] a_up, b_up;
-    reg[2:0] count;
-    reg done;
-
-    initial begin
-        a_up = a;
-        b_up = b;
-    end
+    reg [2:0] count;
+    reg [3:0] reg_data;
 
     always @ (posedge clk) begin
-        
-        if(!done) begin
-            a_inbit <= a[3];
-            b_inbit <= b[3];
-            a_up <= a_up >> 1;
-            b_up <= b_up >> 1;
-            count <= count + 1;
+        if(rst) begin 
+            reg_data <= 0;
+            out_bit <= 0;
+            done <= 0;
+            count <= 0;
         end
 
-        if (count == 4)
-            done = 1'b1;
+        else if (load) begin
+            reg_data <= data_in;
+            count <= 0;
+        end
+
+        else if (!done) begin
+            out_bit <= reg_data[0];
+            reg_data <= reg_data >> 1;
+            count <= count + 1;
+            if( count == 3) begin
+                done = 1'b1;
+            end
+        end
     end
 endmodule
 
 module d_ff(
-
-    input clk, d,
-    output reg q,
-);
-
-    always @ (posedge clk)
-        q <= d;
-    end
-
-endmodule
-
-module top(
     input clk,
-    input a, b,
-    output sum_bit, carry_bit
+    input d,
+    output reg q
 );
-    reg a_inbit_top, b_inbit_top
 
     always @ (posedge clk) begin
-
-        in_register in1(.a(a), .b(b), .a_inbit(a_inbit_top), b_inbit(b_inbit_top));
-        d_ff ff1 (.d(cin), .q(carry);
-        full_adder_serial fa1(.a(a_inbit_top), .b(b_inbit_top), .cin(c_d), .sum(sum_bit),.carry(carry_bit));
+        if(load)
+            q <= 0;
+        else
+            q <= d;
     end
 endmodule
+
+module shift_register_top(
+
+    input clk,
+    input 
+)
