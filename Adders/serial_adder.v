@@ -56,7 +56,41 @@ module d_ff(
 endmodule
 
 module shift_register_top(
-
+    input rst,
+    input load,
     input clk,
-    input 
-)
+    input [3:0] a, b,
+    // input c_bit,
+    output sum_bit, carry_bit,
+    output done
+);
+
+    wire a_bit, b_bit;
+    wire done_a, done_b,
+    wire carry_present, carry_next;
+
+    in_registers in_a(
+        .rst(rst),
+        .clk(clk),
+        .load(load),
+        .data_in(a),
+        .done_a(done),
+        .out_bit(a_bit)
+    );
+
+    in_registers in_b(
+        .rst(rst),
+        .clk(clk),
+        .load(load),
+        .data_in(b),
+        .done_b(done),
+        .out_bit(b_bit)
+    );
+
+    full_adder_serial add1(
+        .a(a_bit),
+        .b(b_bit),
+        .cin(carry_next),
+        
+    )
+
