@@ -1,10 +1,31 @@
+// module full_adder_serial(
+//     input a, b, cin,
+//     output sum, carry
+// );
+//     if(load)
+//         carry = 0;
+//     assign sum = a ^ b ^ cin;
+//     assign carry = (a & b) | (b & cin) | (cin & a);
+// endmodule
+
 module full_adder_serial(
     input a, b, cin,
-    output sum, carry
+    input load,
+    output reg sum,
+    output reg carry
 );
-    assign sum = a ^ b ^ cin;
-    assign carry = (a & b) | (b & cin) | (cin & a);
+
+    always @(*) begin
+        if (load)
+            carry = 0;  
+        else
+            carry = (a & b) | (b & cin) | (cin & a);
+
+        sum = a ^ b ^ cin;
+    end
+
 endmodule
+
 
 module in_registers(
     input rst,
@@ -17,7 +38,7 @@ module in_registers(
     reg [2:0] count;
     reg [3:0] reg_data;
 
-    always @ (posedge clk) begin
+    always @ (posedge clk or posedge rst) begin
         if(rst) begin 
             reg_data <= 0;
             out_bit <= 0;
@@ -28,6 +49,7 @@ module in_registers(
         else if (load) begin
             reg_data <= data_in;
             count <= 0;
+            done <= 0;
         end
 
         else if (!done) begin
@@ -35,20 +57,22 @@ module in_registers(
             reg_data <= reg_data >> 1;
             count <= count + 1;
             if( count == 3) begin
-                done = 1'b1;
+                done <= 1'b1;
             end
         end
     end
 endmodule
 
 module d_ff(
+    input load,
+    input rst,
     input clk,
     input d,
     output reg q
 );
 
-    always @ (posedge clk) begin
-        if(load)
+    always @ (posedge clk or posedge rst) begin
+        if(rst || load)
             q <= 0;
         else
             q <= d;
@@ -66,7 +90,7 @@ module shift_register_top(
 );
 
     wire a_bit, b_bit;
-    wire done_a, done_b,
+    wire done_a, done_b;
     wire carry_present, carry_next;
 
     in_registers in_a(
@@ -74,7 +98,7 @@ module shift_register_top(
         .clk(clk),
         .load(load),
         .data_in(a),
-        .done_a(done),
+        .done(done_a),
         .out_bit(a_bit)
     );
 
@@ -83,14 +107,28 @@ module shift_register_top(
         .clk(clk),
         .load(load),
         .data_in(b),
-        .done_b(done),
+        .done(done_b),
         .out_bit(b_bit)
     );
 
-    full_adder_serial add1(
+    full_adder_serial adder1(
         .a(a_bit),
         .b(b_bit),
-        .cin(carry_next),
-        
-    )
+        .cin(carry_present),
+        .sum(sum_bit),
+        .carry(carry_next)
+    );
+
+    d_ff flipf1(
+        .clk(clk),
+        .rst(rst),
+        .load(load),
+        .d(carry_next),
+        .q(carry_present)
+    );
+
+    assign done = done_a & done_b;
+    assign carry_bit = carry_next;
+
+endmodule
 
