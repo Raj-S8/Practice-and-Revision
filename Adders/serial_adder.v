@@ -2,7 +2,7 @@
 //     input a, b, cin,
 //     output sum, carry
 // );
-//     if(load)
+//     if(load) Cant write the if block without the initial or always block
 //         carry = 0;
 //     assign sum = a ^ b ^ cin;
 //     assign carry = (a & b) | (b & cin) | (cin & a);
@@ -79,6 +79,54 @@ module d_ff(
     end
 endmodule
 
+// module out_register(
+//     input clk, rst,
+//     input in_bit, load
+//     output [3:0] result
+// );
+//     reg [3:0] res;
+
+//     always @ (posedge clk or posedge rst or posedge load) begin
+//         if (rst || load) begin
+//             res <= 0;
+//         end
+
+//         else begin
+//             res[3] <= in_bit;
+//             res <= res >> 1;
+//         end
+//     end
+//     always @ (*) begin
+//         result <= res;
+//     end
+
+// endmodule
+
+module out_register(
+     input clk, rst,
+     input in_bit, load,
+     output [3:0] result // Forgot the use of reg but used it inside an always block at first...see the comment below;
+ );
+     reg [3:0] res;
+
+     always @ (posedge clk or posedge rst or posedge load) begin
+         if (rst || load) begin
+             res <= 0;
+         end
+
+         else begin
+             res <= {in_bit, res[3:1]};
+         end
+     end
+
+     assign result = res;
+
+    //  always @ (*) begin
+    //     result <= res;   // Not necessary we can simply use assign
+    // end
+
+endmodule
+
 module shift_register_top(
     input rst,
     input load,
@@ -86,6 +134,7 @@ module shift_register_top(
     input [3:0] a, b,
     // input c_bit,
     output sum_bit, carry_bit,
+    output [3:0] result,
     output done
 );
 
@@ -127,8 +176,21 @@ module shift_register_top(
         .q(carry_present)
     );
 
+    out_register out1(
+        .clk(clk),
+        .load(load),
+        .rst(rst),
+        .in_bit(sum_bit),
+        .result(result)
+    );
+
     assign done = done_a & done_b;
+
+    /* In actual implementation of the serial adder we need the carry_bit which is propagated by the d_flip flop. Therefore the 
+    correct statement should be assign carry_bit = carry_next;*/
+    
     assign carry_bit = carry_next;
+
 
 endmodule
 
